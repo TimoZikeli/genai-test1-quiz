@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Generative AI · Test 1 · Lernmaterial</title>
+<title>Generative AI · Test 1 · Study material</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css" integrity="sha384-WwGtaC6ywCHxA5cstpj/3+xIZvTez8dq2IcBQaXRkenHZ7FVVq1ZROtURwfbtTlG" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@18.2.1/lib/marked.umd.js" integrity="sha384-eGsnYqMR1DwKM8Hap0jzlzZulA9iLneQ1yxDuryiYhQd2xn7qVXF+6yXoP7plj95" crossorigin="anonymous"></script>
@@ -84,6 +84,11 @@
   .done .opt.neutral { opacity: .55; }
   .q-foot { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
   .q-points { font-weight: 700; }
+  .why { display: none; margin: 2px 10px 6px 62px; padding: 6px 12px; border-radius: 6px; font-size: 14px; background: var(--bg); border-left: 3px solid var(--bad); }
+  .why.missed { border-left-color: var(--ok); }
+  .why p { margin: 0; }
+  .done .why.show { display: block; }
+  .per-lecture input { width: 52px; font: inherit; padding: 2px 6px; border: 1px solid var(--line); border-radius: 6px; }
   .explain { display: none; margin-top: 14px; background: var(--bg); border-radius: 10px; padding: 12px 16px 10px 46px; position: relative; }
   .explain::before { content: "💡"; position: absolute; left: 14px; top: 11px; }
   .done .explain { display: block; }
@@ -128,7 +133,7 @@
 <body>
 <header>
   <div class="bar">
-    <div class="brand">Generative AI <small>Test 1 · Lernmaterial</small></div>
+    <div class="brand">Generative AI <small>Test 1 · Study material</small></div>
     <div class="chips tabs" id="tabs"></div>
   </div>
   <div class="bar"><div class="chips" id="lectures"></div></div>
@@ -137,9 +142,10 @@
   <section id="summary" class="summary-layout"><nav class="toc" id="toc"></nav><div id="articles"></div></section>
   <section id="quiz" hidden>
     <div class="quiz-tools">
-      <label><input type="checkbox" id="shuffle"> Fragen mischen</label>
-      <label><input type="checkbox" id="openOnly"> Nur offene und nicht volle Punkte</label>
-      <button class="btn ghost" id="reset">Antworten zurücksetzen</button>
+      <label class="per-lecture">Questions per lecture <input type="number" id="perLecture" min="1"> <span id="total"></span></label>
+      <label><input type="checkbox" id="shuffle"> Shuffle</label>
+      <label><input type="checkbox" id="openOnly"> Only questions without full points</label>
+      <button class="btn ghost" id="reset">Reset answers</button>
       <span class="score" id="score"></span>
     </div>
     <div id="questions"></div>
@@ -147,13 +153,16 @@
 </main>
 <script>
 const LECTURES = window.LECTURES;
-const STORE = "genai-test1-answers";
-const CALLOUTS = { KEY: "Kernaussage", TRAP: "Typische Falle", MARKED: "Von dir markiert", NOTEST: "Nicht prüfungsrelevant" };
+const STORE = "genai-test1-answers-v2";
+const PER_LECTURE = "genai-test1-per-lecture";
+const MAX_PER_LECTURE = Math.max(...LECTURES.map((l) => l.questions.length));
+const CALLOUTS = { KEY: "Key point", TRAP: "Common trap", MARKED: "Your highlight", NOTEST: "Not on the test" };
 const HAS_SUMMARY = LECTURES.some((l) => l.summary);
 const state = {
   tab: location.hash === "#quiz" || !HAS_SUMMARY ? "quiz" : "summary",
   lecture: "all",
   answers: JSON.parse(localStorage.getItem(STORE) || "{}"),
+  perLecture: Math.min(MAX_PER_LECTURE, Number(localStorage.getItem(PER_LECTURE)) || MAX_PER_LECTURE),
 };
 const $ = (id) => document.getElementById(id);
 
@@ -211,8 +220,12 @@ function score(q, ticks) {
   return Math.max(0, pts);
 }
 
+// Questions are stored most important first, so a smaller count drops the least important ones.
+const selectedItems = () =>
+  visibleLectures().flatMap((lec) => lec.questions.slice(0, state.perLecture).map((q) => ({ q, lec, id: `${lec.id}#${q.topic}` })));
+
 function quizItems() {
-  let items = visibleLectures().flatMap((lec) => lec.questions.map((q, i) => ({ q, lec, id: `${lec.id}#${i}` })));
+  let items = selectedItems();
   if ($("openOnly").checked) items = items.filter(({ id }) => !(state.answers[id]?.points >= 1.5));
   if ($("shuffle").checked) {
     for (let i = items.length - 1; i > 0; i--) {
@@ -224,11 +237,12 @@ function quizItems() {
 }
 
 function renderScore() {
-  const ids = visibleLectures().flatMap((lec) => lec.questions.map((_, i) => `${lec.id}#${i}`));
+  const ids = selectedItems().map(({ id }) => id);
   const done = ids.filter((id) => state.answers[id]);
   const pts = done.reduce((s, id) => s + state.answers[id].points, 0);
   const pct = done.length ? Math.round((100 * pts) / (1.5 * done.length)) : 0;
-  $("score").textContent = `${done.length}/${ids.length} beantwortet · ${pts.toFixed(2)} / ${(1.5 * done.length).toFixed(1)} Punkte (${pct} %)`;
+  $("total").textContent = state.lecture === "all" ? `of ${MAX_PER_LECTURE} · ${ids.length} in total` : `of ${MAX_PER_LECTURE}`;
+  $("score").textContent = `${done.length}/${ids.length} answered · ${pts.toFixed(2)} / ${(1.5 * done.length).toFixed(1)} points (${pct} %)`;
 }
 
 function renderQuestion({ q, lec, id }, number) {
@@ -242,21 +256,28 @@ function renderQuestion({ q, lec, id }, number) {
       <label class="opt">
         <input type="checkbox" ${saved?.ticks[i] ? "checked" : ""} ${saved ? "disabled" : ""}>
         <span class="letter">${"ABCD"[i]}</span><span>${md(o.text, true)}</span><span class="verdict"></span>
-      </label>`).join("")}
-    <div class="q-foot"><button class="btn">Prüfen</button><span class="q-points"></span></div>
+      </label>
+      <div class="why">${md(o.explanation || "", true)}</div>`).join("")}
+    <div class="q-foot"><button class="btn">Check</button><span class="q-points"></span></div>
     <div class="explain">${md(q.explanation)}<div class="src">${lec.title} · ${md(q.topic, true)}</div></div>`;
   const boxes = [...card.querySelectorAll("input")];
   const btn = card.querySelector(".btn");
 
   const reveal = (ticks) => {
+    const whys = card.querySelectorAll(".why");
     card.querySelectorAll(".opt").forEach((el, i) => {
       const correct = q.options[i].correct;
       el.classList.add(correct ? "correct" : ticks[i] ? "wrong" : "neutral");
-      el.querySelector(".verdict").textContent = correct ? (ticks[i] ? "✓ richtig" : "✓ fehlte") : ticks[i] ? "✗ falsch" : "";
+      el.querySelector(".verdict").textContent = correct ? (ticks[i] ? "✓ correct" : "✓ missed") : ticks[i] ? "✗ wrong" : "";
+      whys[i].classList.toggle("show", correct !== ticks[i] && Boolean(q.options[i].explanation));
+      whys[i].classList.toggle("missed", correct);
     });
+    // Fallback for questions without per-option explanations: show the explanation of the whole question.
+    const missingWhy = q.options.some((o, i) => o.correct !== ticks[i] && !o.explanation);
+    card.querySelector(".explain").hidden = !missingWhy;
     const pts = score(q, ticks);
     card.querySelector(".q-points").textContent = `${pts.toFixed(2)} / 1.5`;
-    btn.textContent = "Nochmal";
+    btn.textContent = "Try again";
   };
 
   if (saved) reveal(saved.ticks);
@@ -282,14 +303,14 @@ function renderQuiz() {
   list.innerHTML = "";
   const items = quizItems();
   items.forEach((item, i) => list.append(renderQuestion(item, i + 1)));
-  if (!items.length) list.innerHTML = `<p class="empty">Keine Fragen in dieser Auswahl.</p>`;
+  if (!items.length) list.innerHTML = `<p class="empty">No questions in this selection.</p>`;
   renderScore();
 }
 
 function render() {
   $("tabs").hidden = !HAS_SUMMARY;
-  chips($("tabs"), [["summary", "Zusammenfassung"], ["quiz", "Quiz"]], state.tab, (t) => { state.tab = t; history.replaceState(null, "", `#${t}`); render(); });
-  chips($("lectures"), [["all", "Alle Lektionen"], ...LECTURES.map((l) => [l.id, l.title])], state.lecture, (l) => { state.lecture = l; render(); });
+  chips($("tabs"), [["summary", "Summary"], ["quiz", "Quiz"]], state.tab, (t) => { state.tab = t; history.replaceState(null, "", `#${t}`); render(); });
+  chips($("lectures"), [["all", "All lectures"], ...LECTURES.map((l) => [l.id, l.title])], state.lecture, (l) => { state.lecture = l; render(); });
   $("summary").hidden = state.tab !== "summary";
   $("quiz").hidden = state.tab !== "quiz";
   state.tab === "summary" ? renderSummary() : renderQuiz();
@@ -297,9 +318,17 @@ function render() {
 }
 
 $("shuffle").onchange = $("openOnly").onchange = renderQuiz;
+$("perLecture").max = MAX_PER_LECTURE;
+$("perLecture").value = state.perLecture;
+$("perLecture").onchange = (e) => {
+  state.perLecture = Math.min(MAX_PER_LECTURE, Math.max(1, Math.round(Number(e.target.value)) || MAX_PER_LECTURE));
+  e.target.value = state.perLecture;
+  localStorage.setItem(PER_LECTURE, state.perLecture);
+  renderQuiz();
+};
 $("reset").onclick = () => {
-  if (!confirm("Alle gespeicherten Antworten dieser Auswahl löschen?")) return;
-  visibleLectures().forEach((lec) => lec.questions.forEach((_, i) => delete state.answers[`${lec.id}#${i}`]));
+  if (!confirm("Delete all saved answers in this selection?")) return;
+  selectedItems().forEach(({ id }) => delete state.answers[id]);
   localStorage.setItem(STORE, JSON.stringify(state.answers));
   renderQuiz();
 };
