@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generative AI · Test 1 · Lernmaterial</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.css" integrity="sha384-WwGtaC6ywCHxA5cstpj/3+xIZvTez8dq2IcBQaXRkenHZ7FVVq1ZROtURwfbtTlG" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.19.1/dist/katex.min.js" integrity="sha384-a1WQdjRj162i159OYq041X6I4K8NenkrI09LlPmiHg0YOb7CR+wJOraXwK9abpnE" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@18.2.1/lib/marked.umd.js" integrity="sha384-eGsnYqMR1DwKM8Hap0jzlzZulA9iLneQ1yxDuryiYhQd2xn7qVXF+6yXoP7plj95" crossorigin="anonymous"></script>
+<script src="data.js"></script>
+<style>
+  :root {
+    --ink: #1d2428; --muted: #6b767c; --line: #e3e8ea; --bg: #f6f8f8; --card: #fff;
+    --accent: #0f766e; --accent-soft: #e6f3f1; --ok: #15803d; --ok-soft: #e8f6ec;
+    --bad: #b91c1c; --bad-soft: #fdecec; --warn: #b45309; --warn-soft: #fdf3e4;
+    --mark: #7c3aed; --mark-soft: #f3edfd;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; font: 16px/1.6 -apple-system, "Segoe UI", Inter, system-ui, sans-serif; color: var(--ink); background: var(--bg); }
+  header { position: sticky; top: 0; z-index: 5; background: var(--card); border-bottom: 1px solid var(--line); }
+  .bar { max-width: 1180px; margin: 0 auto; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+  .brand { font-weight: 700; letter-spacing: .02em; margin-right: auto; }
+  .brand small { color: var(--muted); font-weight: 500; margin-left: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 14px; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tabs .chip { font-weight: 600; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+
+  /* Summary */
+  .summary-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px; align-items: start; }
+  nav.toc { position: sticky; top: 76px; max-height: calc(100vh - 100px); overflow: auto; font-size: 14px; }
+  nav.toc a { display: block; color: var(--muted); text-decoration: none; padding: 3px 0 3px 10px; border-left: 2px solid var(--line); }
+  nav.toc a.h3 { padding-left: 22px; font-size: 13px; }
+  nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
+  nav.toc .lec { font-weight: 700; color: var(--ink); margin-top: 12px; }
+  article { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 36px 44px; margin-bottom: 28px; }
+  article [id] { scroll-margin-top: 110px; }
+  article h1 { font-size: 30px; line-height: 1.2; margin: 0 0 6px; }
+  article h2 { font-size: 22px; margin: 36px 0 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+  article h3 { font-size: 18px; margin: 26px 0 8px; color: var(--accent); }
+  article h4 { font-size: 16px; margin: 20px 0 6px; }
+  article p, article li { max-width: 78ch; }
+  article table { border-collapse: collapse; margin: 14px 0; font-size: 15px; display: block; overflow-x: auto; }
+  article th, article td { border: 1px solid var(--line); padding: 6px 12px; text-align: left; vertical-align: top; }
+  article th { background: var(--bg); }
+  code { font: 14px ui-monospace, "SF Mono", Menlo, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+  pre { background: #1f2a30; color: #e8eef0; padding: 14px 16px; border-radius: 10px; overflow-x: auto; }
+  pre code { background: none; color: inherit; padding: 0; }
+  .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+  blockquote { margin: 16px 0; padding: 10px 16px; border-left: 4px solid var(--line); background: var(--bg); border-radius: 0 8px 8px 0; }
+  blockquote p { margin: 6px 0; }
+  figure { margin: 16px 0; }
+  figure img { display: block; max-width: 100%; max-height: 420px; margin: 0 auto; }
+  figcaption { font-size: 13px; color: var(--muted); text-align: center; margin-top: 4px; }
+  .callout-label { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+  .callout-key { border-color: var(--accent); background: var(--accent-soft); } .callout-key .callout-label { color: var(--accent); }
+  .callout-trap { border-color: var(--warn); background: var(--warn-soft); } .callout-trap .callout-label { color: var(--warn); }
+  .callout-marked { border-color: var(--mark); background: var(--mark-soft); } .callout-marked .callout-label { color: var(--mark); }
+  .callout-notest { border-color: var(--muted); background: #f1f3f4; color: var(--muted); } .callout-notest .callout-label { color: var(--muted); }
+
+  /* Quiz */
+  .quiz-tools { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; margin-bottom: 18px; font-size: 14px; }
+  .quiz-tools label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  .score { margin-left: auto; font-weight: 600; }
+  .btn { border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: 8px; padding: 6px 14px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn.ghost { background: var(--card); color: var(--accent); }
+  .q { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px 26px; margin-bottom: 18px; }
+  .q-head { font-size: 12px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; display: flex; justify-content: space-between; }
+  .q-stem { font-size: 19px; font-weight: 500; margin: 8px 0 14px; }
+  .q-stem p { margin: 6px 0; }
+  .opt { display: grid; grid-template-columns: 22px 20px 1fr auto; gap: 10px; align-items: start; padding: 7px 10px; border-radius: 8px; cursor: pointer; }
+  .opt:hover { background: var(--bg); }
+  .opt input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--accent); }
+  .opt .letter { font-weight: 700; color: var(--muted); }
+  .opt p { margin: 0; }
+  .opt .verdict { font-size: 13px; font-weight: 700; }
+  .done .opt { cursor: default; }
+  .done .opt.correct { background: var(--ok-soft); }
+  .done .opt.correct .verdict { color: var(--ok); }
+  .done .opt.wrong { background: var(--bad-soft); }
+  .done .opt.wrong .verdict { color: var(--bad); }
+  .done .opt.neutral { opacity: .55; }
+  .q-foot { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+  .q-points { font-weight: 700; }
+  .explain { display: none; margin-top: 14px; background: var(--bg); border-radius: 10px; padding: 12px 16px 10px 46px; position: relative; }
+  .explain::before { content: "💡"; position: absolute; left: 14px; top: 11px; }
+  .done .explain { display: block; }
+  .explain p { margin: 4px 0; }
+  .explain .src { font-size: 13px; color: var(--muted); }
+  .empty { color: var(--muted); text-align: center; padding: 40px; }
+
+  @media (max-width: 860px) {
+    .summary-layout { grid-template-columns: 1fr; } nav.toc { display: none; }
+    article { padding: 22px; }
+  }
+  @media print {
+    @page { size: A4; margin: 12mm 13mm; }
+    body { background: #fff; font-size: 9.5pt; line-height: 1.4; }
+    header, nav.toc, .quiz-tools, #quiz { display: none !important; }
+    main { padding: 0; max-width: none; }
+    .summary-layout { display: block; }
+    article { border: 0; padding: 0; margin: 0; break-after: page; }
+    article p, article li { max-width: none; }
+    article h1 { font-size: 17pt; }
+    article h2 { font-size: 13pt; margin: 14px 0 4px; padding-top: 6px; }
+    article h3 { font-size: 11pt; margin: 10px 0 3px; }
+    article h4 { font-size: 10pt; margin: 8px 0 2px; }
+    article p { margin: 4px 0; }
+    article ul, article ol { margin: 4px 0; padding-left: 18px; }
+    article table { font-size: 8.5pt; margin: 6px 0; }
+    article th, article td { padding: 2px 7px; }
+    blockquote { margin: 6px 0; padding: 4px 10px; }
+    blockquote p { margin: 2px 0; }
+    .callout-label { font-size: 7pt; }
+    code { font-size: 8.5pt; }
+    pre { padding: 6px 10px; font-size: 8.5pt; }
+    figure { margin: 8px 0; }
+    figure img { max-height: 6.5cm; max-width: 80%; }
+    figcaption { font-size: 7.5pt; }
+    article h2, article h3, article h4 { break-after: avoid; }
+    blockquote, table, .katex-display, pre, figure { break-inside: avoid; }
+    pre { white-space: pre-wrap; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">Generative AI <small>Test 1 · Lernmaterial</small></div>
+    <div class="chips tabs" id="tabs"></div>
+  </div>
+  <div class="bar"><div class="chips" id="lectures"></div></div>
+</header>
+<main>
+  <section id="summary" class="summary-layout"><nav class="toc" id="toc"></nav><div id="articles"></div></section>
+  <section id="quiz" hidden>
+    <div class="quiz-tools">
+      <label><input type="checkbox" id="shuffle"> Fragen mischen</label>
+      <label><input type="checkbox" id="openOnly"> Nur offene und nicht volle Punkte</label>
+      <button class="btn ghost" id="reset">Antworten zurücksetzen</button>
+      <span class="score" id="score"></span>
+    </div>
+    <div id="questions"></div>
+  </section>
+</main>
+<script>
+const LECTURES = window.LECTURES;
+const STORE = "genai-test1-answers";
+const CALLOUTS = { KEY: "Kernaussage", TRAP: "Typische Falle", MARKED: "Von dir markiert", NOTEST: "Nicht prüfungsrelevant" };
+const HAS_SUMMARY = LECTURES.some((l) => l.summary);
+const state = {
+  tab: location.hash === "#quiz" || !HAS_SUMMARY ? "quiz" : "summary",
+  lecture: "all",
+  answers: JSON.parse(localStorage.getItem(STORE) || "{}"),
+};
+const $ = (id) => document.getElementById(id);
+
+function md(text, inline = false) {
+  const math = [];
+  const guarded = text.replace(/\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)/g, (_, block, inl) => {
+    math.push({ tex: (block ?? inl).replace(/\n\s*>\s?/g, "\n"), display: block !== undefined });
+    return `@@MATH${math.length - 1}@@`;
+  });
+  let html = inline ? marked.parseInline(guarded) : marked.parse(guarded);
+  html = html.replace(/@@MATH(\d+)@@/g, (_, i) =>
+    katex.renderToString(math[i].tex, { displayMode: math[i].display, throwOnError: false }));
+  return html
+    .replace(/<blockquote>\s*<p>\[!(\w+)\]\s*/g, (_, type) =>
+      `<blockquote class="callout callout-${type.toLowerCase()}"><p><span class="callout-label">${CALLOUTS[type] ?? type}</span>`)
+    .replace(/<p>(<img src="([^"]+)" alt="([^"]*)">)<\/p>/g, (_, img, src, alt) =>
+      `<figure>${img}<figcaption>${alt}</figcaption></figure>`);
+}
+
+function chips(el, items, active, onPick) {
+  el.innerHTML = "";
+  for (const [value, label] of items) {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.textContent = label;
+    b.setAttribute("aria-pressed", value === active);
+    b.onclick = () => onPick(value);
+    el.append(b);
+  }
+}
+
+const visibleLectures = () => LECTURES.filter((l) => state.lecture === "all" || l.id === state.lecture);
+const slug = (lecId, text) => `${lecId}-${text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-")}`;
+
+function renderSummary() {
+  const toc = $("toc"), articles = $("articles");
+  toc.innerHTML = articles.innerHTML = "";
+  for (const lec of visibleLectures()) {
+    const art = document.createElement("article");
+    art.innerHTML = md(lec.summary);
+    toc.insertAdjacentHTML("beforeend", `<a class="lec" href="#${lec.id}">${lec.title}</a>`);
+    art.querySelector("h1").id = lec.id;
+    art.querySelectorAll("h2, h3").forEach((h) => {
+      h.id = slug(lec.id, h.textContent);
+      toc.insertAdjacentHTML("beforeend", `<a class="${h.tagName.toLowerCase()}" href="#${h.id}">${h.textContent}</a>`);
+    });
+    articles.append(art);
+  }
+}
+
+function score(q, ticks) {
+  const n = q.options.filter((o) => o.correct).length;
+  if (n === 0) return ticks.some(Boolean) ? 0 : 1.5;
+  const pts = q.options.reduce((s, o, i) => s + (ticks[i] ? (o.correct ? 1.5 / n : -0.75) : 0), 0);
+  return Math.max(0, pts);
+}
+
+function quizItems() {
+  let items = visibleLectures().flatMap((lec) => lec.questions.map((q, i) => ({ q, lec, id: `${lec.id}#${i}` })));
+  if ($("openOnly").checked) items = items.filter(({ id }) => !(state.answers[id]?.points >= 1.5));
+  if ($("shuffle").checked) {
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+  }
+  return items;
+}
+
+function renderScore() {
+  const ids = visibleLectures().flatMap((lec) => lec.questions.map((_, i) => `${lec.id}#${i}`));
+  const done = ids.filter((id) => state.answers[id]);
+  const pts = done.reduce((s, id) => s + state.answers[id].points, 0);
+  const pct = done.length ? Math.round((100 * pts) / (1.5 * done.length)) : 0;
+  $("score").textContent = `${done.length}/${ids.length} beantwortet · ${pts.toFixed(2)} / ${(1.5 * done.length).toFixed(1)} Punkte (${pct} %)`;
+}
+
+function renderQuestion({ q, lec, id }, number) {
+  const saved = state.answers[id];
+  const card = document.createElement("div");
+  card.className = "q" + (saved ? " done" : "");
+  card.innerHTML = `
+    <div class="q-head"><span>Question ${number}</span><span>${lec.title}</span></div>
+    <div class="q-stem">${md(q.stem)}</div>
+    ${q.options.map((o, i) => `
+      <label class="opt">
+        <input type="checkbox" ${saved?.ticks[i] ? "checked" : ""} ${saved ? "disabled" : ""}>
+        <span class="letter">${"ABCD"[i]}</span><span>${md(o.text, true)}</span><span class="verdict"></span>
+      </label>`).join("")}
+    <div class="q-foot"><button class="btn">Prüfen</button><span class="q-points"></span></div>
+    <div class="explain">${md(q.explanation)}<div class="src">${lec.title} · ${md(q.topic, true)}</div></div>`;
+  const boxes = [...card.querySelectorAll("input")];
+  const btn = card.querySelector(".btn");
+
+  const reveal = (ticks) => {
+    card.querySelectorAll(".opt").forEach((el, i) => {
+      const correct = q.options[i].correct;
+      el.classList.add(correct ? "correct" : ticks[i] ? "wrong" : "neutral");
+      el.querySelector(".verdict").textContent = correct ? (ticks[i] ? "✓ richtig" : "✓ fehlte") : ticks[i] ? "✗ falsch" : "";
+    });
+    const pts = score(q, ticks);
+    card.querySelector(".q-points").textContent = `${pts.toFixed(2)} / 1.5`;
+    btn.textContent = "Nochmal";
+  };
+
+  if (saved) reveal(saved.ticks);
+  btn.onclick = () => {
+    if (card.classList.contains("done")) {
+      delete state.answers[id];
+      card.replaceWith(renderQuestion({ q, lec, id }, number));
+    } else {
+      const ticks = boxes.map((b) => b.checked);
+      state.answers[id] = { ticks, points: score(q, ticks) };
+      card.classList.add("done");
+      boxes.forEach((b) => (b.disabled = true));
+      reveal(ticks);
+    }
+    localStorage.setItem(STORE, JSON.stringify(state.answers));
+    renderScore();
+  };
+  return card;
+}
+
+function renderQuiz() {
+  const list = $("questions");
+  list.innerHTML = "";
+  const items = quizItems();
+  items.forEach((item, i) => list.append(renderQuestion(item, i + 1)));
+  if (!items.length) list.innerHTML = `<p class="empty">Keine Fragen in dieser Auswahl.</p>`;
+  renderScore();
+}
+
+function render() {
+  $("tabs").hidden = !HAS_SUMMARY;
+  chips($("tabs"), [["summary", "Zusammenfassung"], ["quiz", "Quiz"]], state.tab, (t) => { state.tab = t; history.replaceState(null, "", `#${t}`); render(); });
+  chips($("lectures"), [["all", "Alle Lektionen"], ...LECTURES.map((l) => [l.id, l.title])], state.lecture, (l) => { state.lecture = l; render(); });
+  $("summary").hidden = state.tab !== "summary";
+  $("quiz").hidden = state.tab !== "quiz";
+  state.tab === "summary" ? renderSummary() : renderQuiz();
+  window.scrollTo(0, 0);
+}
+
+$("shuffle").onchange = $("openOnly").onchange = renderQuiz;
+$("reset").onclick = () => {
+  if (!confirm("Alle gespeicherten Antworten dieser Auswahl löschen?")) return;
+  visibleLectures().forEach((lec) => lec.questions.forEach((_, i) => delete state.answers[`${lec.id}#${i}`]));
+  localStorage.setItem(STORE, JSON.stringify(state.answers));
+  renderQuiz();
+};
+render();
+</script>
+</body>
+</html>
